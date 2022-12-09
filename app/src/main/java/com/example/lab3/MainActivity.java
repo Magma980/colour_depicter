@@ -110,17 +110,17 @@ public class MainActivity extends AppCompatActivity {
                     R.raw.blue,
                     R.raw.red,
                     R.raw.fuchsia,
-//                    "gray",
-//                    "green",
-//                    "lime",
-//                    "maroon",
-//                    "navy",
-//                    "olive",
-//                    "purple",
-//                    "silver",
-//                    "teal",
-//                    "white",
-//                    "yellow"
+                    R.raw.gray,
+                    R.raw.green,
+                    R.raw.lime,
+                    R.raw.maroon,
+                    R.raw.navy,
+                    R.raw.olive,
+                    R.raw.purple,
+                    R.raw.silver,
+                    R.raw.teal,
+                    R.raw.white,
+                    R.raw.yellow
             };
             final int[] colors = {0,255,255,
                     0,0,0,
@@ -178,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
                     String name = colorNames[index];
                     // file name to play the sound
                     //String fileName = name +".mp3";
-                int audioId = colorIds[index];
+                    int audioId = colorIds[index];
 
                 // PLAY THE SOUND HERE
                 MediaPlayer mediaPlayer = MediaPlayer.create(context, audioId);

@@ -9,6 +9,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
@@ -22,7 +24,26 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 public class MainActivity extends AppCompatActivity {
 
+    final int [] colorIds = {R.raw.aqua,
+            R.raw.black,
+            R.raw.blue,
+            R.raw.red,
+            R.raw.fuchsia,
+            R.raw.gray,
+            R.raw.green,
+            R.raw.lime,
+            R.raw.maroon,
+            R.raw.navy,
+            R.raw.olive,
+            R.raw.purple,
+            R.raw.silver,
+            R.raw.teal,
+            R.raw.white,
+            R.raw.yellow
+    };
+
     private TextView txv_rgb;
+    private Switch switch_speaker;
 //    private TextView txv_light;
 //    private TextView txv_proximity;
     private Button btn_color;
@@ -31,6 +52,9 @@ public class MainActivity extends AppCompatActivity {
     int g;
     int b;
     String[] colorValues;
+    private boolean canSpeak = true;
+
+    private int audioId;
 
     private MainActivity context;
     private MqttAndroidClient client;
@@ -48,21 +72,37 @@ public class MainActivity extends AppCompatActivity {
 
         context = this;
 
-        txv_rgb = (TextView) findViewById(R.id.txv_rgbValue);
+        // initiate a Switch
+        switch_speaker = findViewById(R.id.speakerSwitch);
+        switch_speaker.setChecked(canSpeak);
+        txv_rgb = findViewById(R.id.txv_rgbValue);
 //        txv_light = (TextView) findViewById(R.id.txv_lightValue);
 //        txv_proximity = (TextView) findViewById(R.id.txv_proximityValue);
-        btn_color = (Button) findViewById(R.id.btnColor);
+        btn_color = findViewById(R.id.btnColor);
 
         connect();
+
+        switch_speaker.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                // do something, the isChecked will be
+                // true if the switch is in the On position
+                canSpeak = isChecked;
+            }
+        });
 
         btn_color.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Add code to execute on click
 
-                MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.red);
-                mediaPlayer.start();
+                // TEST - uncomment to test the application
+               // audioId = colorIds[0];
 
-                btn_color.setTextColor(RGBMessage);
+                if (audioId != 0 && canSpeak) {
+                    MediaPlayer mediaPlayer = MediaPlayer.create(context, audioId);
+                    mediaPlayer.start();
+                }
+
+                //btn_color.setTextColor(RGBMessage);
             }
         });
 
@@ -89,39 +129,22 @@ public class MainActivity extends AppCompatActivity {
 //            String proxMessage;
 //            String luxMessage;
 
-            final String [] colorNames = {"aqua",
-                    "black",
-                    "blue",
-                    "red",
-                    "fuchsia",
-                    "gray",
-                    "green",
-                    "lime",
-                    "maroon",
-                    "navy",
-                    "olive",
-                    "purple",
-                    "silver",
-                    "teal",
-                    "white",
-                    "yellow"};
-            final int [] colorIds = {R.raw.aqua,
-                    R.raw.black,
-                    R.raw.blue,
-                    R.raw.red,
-                    R.raw.fuchsia,
-                    R.raw.gray,
-                    R.raw.green,
-                    R.raw.lime,
-                    R.raw.maroon,
-                    R.raw.navy,
-                    R.raw.olive,
-                    R.raw.purple,
-                    R.raw.silver,
-                    R.raw.teal,
-                    R.raw.white,
-                    R.raw.yellow
-            };
+//            final String [] colorNames = {"aqua",
+//                    "black",
+//                    "blue",
+//                    "red",
+//                    "fuchsia",
+//                    "gray",
+//                    "green",
+//                    "lime",
+//                    "maroon",
+//                    "navy",
+//                    "olive",
+//                    "purple",
+//                    "silver",
+//                    "teal",
+//                    "white",
+//                    "yellow"};
             final int[] colors = {0,255,255,
                     0,0,0,
                     0,0,255,
@@ -148,46 +171,44 @@ public class MainActivity extends AppCompatActivity {
 //                    luxMessage = new String(message.getPayload());
 //                }
 //                else{
-                    colorValues = new String(message.getPayload()).split(",");
-                    r = Integer.parseInt(colorValues[0]);
-                    g = Integer.parseInt(colorValues[1]);
-                    b = Integer.parseInt(colorValues[2]);
-                    RGBMessage = Color.rgb(r, g, b);
-                    System.out.println(RGBMessage);
+                colorValues = new String(message.getPayload()).split(",");
+                r = Integer.parseInt(colorValues[0]);
+                g = Integer.parseInt(colorValues[1]);
+                b = Integer.parseInt(colorValues[2]);
+                RGBMessage = Color.rgb(r, g, b);
+                System.out.println(RGBMessage);
+
+                if (canSpeak) {
 
                     int index = 0;
                     int minDist = Integer.MAX_VALUE;
-                    for (int i=0; i<colors.length; i++)
-                    {
+                    for (int i = 0; i < colors.length; i++) {
                         // get i-th color RGB values from the Color array
-                        int r1 = colors[3*i];
-                        int g1 = colors[3*i +1];
-                        int b1 = colors[3*i + 2];
+                        int r1 = colors[3 * i];
+                        int g1 = colors[3 * i + 1];
+                        int b1 = colors[3 * i + 2];
                         // calculate the squared distance from our color RGB to the i-th table color
-                        int dist = (r1-r)*(r1-r) + (g1-g)*(g1-g) + (b1-b)*(b1-b);
+                        int dist = (r1 - r) * (r1 - r) + (g1 - g) * (g1 - g) + (b1 - b) * (b1 - b);
 
                         // update the min distance and its color table index
-                        if (dist < minDist)
-                        {
-                            minDist =dist;
+                        if (dist < minDist) {
+                            minDist = dist;
                             index = i;
                         }
                     }
 
                     // now we have the closest color in the color table, get the color name
-                    String name = colorNames[index];
+                    //String name = colorNames[index];
                     // file name to play the sound
-                    //String fileName = name +".mp3";
-                    int audioId = colorIds[index];
+                    audioId = colorIds[index];
 
-                // PLAY THE SOUND HERE
-                MediaPlayer mediaPlayer = MediaPlayer.create(context, audioId);
-                mediaPlayer.start();
-                //System.out.println(RGBMessage);
-//              }
+//                    // PLAY THE SOUND HERE
+//                    MediaPlayer mediaPlayer = MediaPlayer.create(context, audioId);
+//                    mediaPlayer.start();
+                }
+
                 String newMessage = new String(message.getPayload());
                 System.out.println("Incoming message: " + newMessage);
-
                 /* add code here to interact with elements
                  (text views, buttons)
                  using data from newMessage

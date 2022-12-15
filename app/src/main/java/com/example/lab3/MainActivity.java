@@ -2,18 +2,23 @@ package com.example.lab3;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.ColorMatrix;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import org.eclipse.paho.android.service.MqttAndroidClient;
+
+/*
+import info.mqtt.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
@@ -22,7 +27,35 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
+/*/
+import org.eclipse.paho.android.service.MqttAndroidClient;
+import org.eclipse.paho.client.mqttv3.IMqttActionListener;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+//*/
+
 public class MainActivity extends AppCompatActivity {
+
+    final int[] colors = {0,255,255,
+            0,0,0,
+            0,0,255,
+            255,0,0,
+            255,0,255,
+            128,128,128,
+            0,128,0,
+            0,255,0,
+            128,0,0,
+            0,0,128,
+            128,128,0,
+            128,0,128,
+            192,192,192,
+            0,128,128,
+            255,255,255,
+            255,255,0};
 
     final int [] colorIds = {R.raw.aqua,
             R.raw.black,
@@ -42,17 +75,44 @@ public class MainActivity extends AppCompatActivity {
             R.raw.yellow
     };
 
-    private TextView txv_rgb;
+    final String [] colorNames = {"aqua",
+            "black",
+            "blue",
+            "red",
+            "fuchsia",
+            "gray",
+            "green",
+            "lime",
+            "maroon",
+            "navy",
+            "olive",
+            "purple",
+            "silver",
+            "teal",
+            "white",
+            "yellow"};
+
+    //private TextView txv_rgb;
+
+    TextView txt_colorName;
+    LinearLayout rgb_layout;
+    ImageView img_palette;
+    TextView txv_sensorTxt;
+
     private Switch switch_speaker;
 //    private TextView txv_light;
 //    private TextView txv_proximity;
     private Button btn_color;
+
     int RGBMessage;
     int r;
     int g;
     int b;
+    int colorIndex = 0;
     String[] colorValues;
     private boolean canSpeak = true;
+    private int colorWhite = Color.rgb(255, 255, 255);
+    private int colorBlack = Color.rgb(0, 0, 0);
 
     private int audioId;
 
@@ -72,15 +132,27 @@ public class MainActivity extends AppCompatActivity {
 
         context = this;
 
-        // initiate a Switch
+        // initialize the Switch
         switch_speaker = findViewById(R.id.speakerSwitch);
         switch_speaker.setChecked(canSpeak);
-        txv_rgb = findViewById(R.id.txv_rgbValue);
+        //txv_rgb = findViewById(R.id.txv_rgbValue);
+        txt_colorName = findViewById(R.id.txt_colorName);
+        txv_sensorTxt = findViewById(R.id.txv_sensorTxt);
+        rgb_layout = findViewById(R.id.rgb_layout);
+        img_palette = findViewById(R.id.img_palette);
+
+        // HIDE:
+        txt_colorName.setVisibility(View.GONE);
+        rgb_layout.setVisibility(View.GONE);
+        img_palette.setVisibility(View.GONE);
+
+        // set the initial text
+        txv_sensorTxt.setText("Nothing yet!");
+
+
 //        txv_light = (TextView) findViewById(R.id.txv_lightValue);
 //        txv_proximity = (TextView) findViewById(R.id.txv_proximityValue);
         btn_color = findViewById(R.id.btnColor);
-
-        connect();
 
         switch_speaker.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -95,17 +167,37 @@ public class MainActivity extends AppCompatActivity {
                 // Add code to execute on click
 
                 // TEST - uncomment to test the application
-               // audioId = colorIds[0];
+                //*
+                colorIndex = 3;
+                int r = colors[colorIndex*3];
+                int g = colors[colorIndex*3+1];
+                int b = colors[colorIndex*3+2];
+                audioId = colorIds[colorIndex];
+                txv_sensorTxt.setText("R: " + r + "    G: " + g + "    B: " + b);
+                btn_color.setBackgroundColor(Color.rgb(r, g, b));
+                txt_colorName.setText(colorNames[colorIndex]);
+                if (colorIndex == 1) {
+                    btn_color.setTextColor(colorWhite);
+                } else {
+                    btn_color.setTextColor(colorBlack);
+                }
+                //*/
+
+                // SHOW controls:
+                txt_colorName.setVisibility(View.VISIBLE);
+                rgb_layout.setVisibility(View.VISIBLE);
+                img_palette.setVisibility(View.VISIBLE);
 
                 if (audioId != 0 && canSpeak) {
                     MediaPlayer mediaPlayer = MediaPlayer.create(context, audioId);
                     mediaPlayer.start();
                 }
-
-                //btn_color.setTextColor(RGBMessage);
             }
         });
 
+        connect();
+
+ //*
         client.setCallback(new MqttCallbackExtended() {
             @Override
             public void connectComplete(boolean reconnect, String serverURI) {
@@ -129,39 +221,6 @@ public class MainActivity extends AppCompatActivity {
 //            String proxMessage;
 //            String luxMessage;
 
-//            final String [] colorNames = {"aqua",
-//                    "black",
-//                    "blue",
-//                    "red",
-//                    "fuchsia",
-//                    "gray",
-//                    "green",
-//                    "lime",
-//                    "maroon",
-//                    "navy",
-//                    "olive",
-//                    "purple",
-//                    "silver",
-//                    "teal",
-//                    "white",
-//                    "yellow"};
-            final int[] colors = {0,255,255,
-                    0,0,0,
-                    0,0,255,
-                    255,0,0,
-                    255,0,255,
-                    128,128,128,
-                    0,128,0,
-                    0,255,0,
-                    128,0,0,
-                    0,0,128,
-                    128,128,0,
-                    128,0,128,
-                    192,192,192,
-                    0,128,128,
-                    255,255,255,
-                    255,255,0};
-
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
 //                if(topic.equals("PROXIMITY")){
@@ -178,58 +237,57 @@ public class MainActivity extends AppCompatActivity {
                 RGBMessage = Color.rgb(r, g, b);
                 System.out.println(RGBMessage);
 
-                if (canSpeak) {
+                colorIndex = 0;
+                int minDist = Integer.MAX_VALUE;
+                for (int i = 0; i < colors.length; i++) {
+                    // get i-th color RGB values from the Color array
+                    int r1 = colors[3 * i];
+                    int g1 = colors[3 * i + 1];
+                    int b1 = colors[3 * i + 2];
+                    // calculate the squared distance from our color RGB to the i-th table color
+                    int dist = (r1 - r) * (r1 - r) + (g1 - g) * (g1 - g) + (b1 - b) * (b1 - b);
 
-                    int index = 0;
-                    int minDist = Integer.MAX_VALUE;
-                    for (int i = 0; i < colors.length; i++) {
-                        // get i-th color RGB values from the Color array
-                        int r1 = colors[3 * i];
-                        int g1 = colors[3 * i + 1];
-                        int b1 = colors[3 * i + 2];
-                        // calculate the squared distance from our color RGB to the i-th table color
-                        int dist = (r1 - r) * (r1 - r) + (g1 - g) * (g1 - g) + (b1 - b) * (b1 - b);
-
-                        // update the min distance and its color table index
-                        if (dist < minDist) {
-                            minDist = dist;
-                            index = i;
-                        }
+                    // update the min distance and its color table index
+                    if (dist < minDist) {
+                        minDist = dist;
+                        colorIndex = i;
                     }
-
-                    // now we have the closest color in the color table, get the color name
-                    //String name = colorNames[index];
-                    // file name to play the sound
-                    audioId = colorIds[index];
-
-//                    // PLAY THE SOUND HERE
-//                    MediaPlayer mediaPlayer = MediaPlayer.create(context, audioId);
-//                    mediaPlayer.start();
                 }
+
+                // now we have the closest color in the color table, get the color name
+                //String name = colorNames[index];
+                // file name to play the sound
+                txt_colorName.setText(colorNames[colorIndex]);
+
+                audioId = colorIds[colorIndex];
 
                 String newMessage = new String(message.getPayload());
                 System.out.println("Incoming message: " + newMessage);
-                /* add code here to interact with elements
-                 (text views, buttons)
-                 using data from newMessage
-                */
+                // add code here to interact with elements
+                // (text views, buttons)
+                // using data from newMessage
+                //
                 // Uncomment accordingly
                 //txv_proximity.setText(proxMessage);
-                txv_rgb.setText(RGBMessage+"");
+                //txv_rgb.setText(RGBMessage+"");
+                txv_sensorTxt.setText("R: " +r + "    G: " +g + "    B: " + b);
+
                 //txv_light.setText(luxMessage);
-                //txv_rgb.setTextColor(RGBMessage);
+                btn_color.setBackgroundColor(RGBMessage);
             }
             @Override
             public void deliveryComplete(IMqttDeliveryToken token) {
             }
         });
+//*/
     }
 
-    private void connect(){
+    private void connect() {
         String clientId = MqttClient.generateClientId();
         client =
                 new MqttAndroidClient(this.getApplicationContext(), SERVER_URI, clientId);
         try {
+            /*
             IMqttToken token = client.connect();
             token.setActionCallback(new IMqttActionListener() {
                 @Override
@@ -247,6 +305,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         } catch (MqttException e) {
+            e.printStackTrace();
+            //*/
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

@@ -15,10 +15,8 @@
     </style>
 
     <style name="PrimaryButton" parent="Widget.AppCompat.Button.Borderless">
-        <item name="android:textColor">@color/depict_button</item>
         <item name="android:background">@color/depict_button</item>
-        <item name="colorPrimary">@color/depict_button</item>
-        <item name="colorPrimaryVariant">@color/depict_button</item>
-        <item name="colorOnPrimary">@color/depict_button</item>
+        <item name="colorPrimary">@color/blue_text</item>
+         <item name="colorOnPrimary">@color/blue_text</item>
     </style>
 </resources>

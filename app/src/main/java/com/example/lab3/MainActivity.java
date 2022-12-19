@@ -241,7 +241,7 @@ public class MainActivity extends AppCompatActivity {
                 // Add code to execute on click
 
                 // TEST - uncomment to test the application
-                //*
+                /*
                 colorIndex = 3;
                 int r = colors[colorIndex*3];
                 int g = colors[colorIndex*3+1];

@@ -41,7 +41,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 public class MainActivity extends AppCompatActivity {
 
     final int[] colors = {0,255,255,
-            0,0,0,
+            //0,0,0,
             0,0,255,
             255,0,0,
             255,0,255,
@@ -55,10 +55,35 @@ public class MainActivity extends AppCompatActivity {
             192,192,192,
             0,128,128,
             255,255,255,
-            255,255,0};
+            255,255,0,
+            255, 125, 0,
+            255, 250, 250,
+            255, 127, 80,
+            150,75,0,
+            123,63,0,
+            255,219,88,
+            194,178,128,
+            127, 255, 212,
+            62,180,137,
+            0,127,255,
+            0,71,171,
+            18,10,143,
+            181,126,220,
+            143,0,255,
+            142, 69, 133,
+            255,192,203,
+            224,17,95,
+            128,0,32,
+            196,30,58,
+            101,0,11,
+            32,32,0,
+            32,0,0,
+            0,32,0,
+            0,0,32
+    };
 
     final int [] colorIds = {R.raw.aqua,
-            R.raw.black,
+            //R.raw.black,
             R.raw.blue,
             R.raw.red,
             R.raw.fuchsia,
@@ -72,11 +97,35 @@ public class MainActivity extends AppCompatActivity {
             R.raw.silver,
             R.raw.teal,
             R.raw.white,
-            R.raw.yellow
+            R.raw.yellow,
+            R.raw.orange,
+            R.raw.snow,
+            R.raw.coral,
+            R.raw.brown,
+            R.raw.chocolate,
+            R.raw.mustarad,
+            R.raw.sand,
+            R.raw.aquamarine,
+            R.raw.mint,
+            R.raw.azure,
+            R.raw.cobalt,
+            R.raw.ultramarine,
+            R.raw.lavender,
+            R.raw.violet,
+            R.raw.plum,
+            R.raw.pink,
+            R.raw.ruby,
+            R.raw.burgundy,
+            R.raw.cardinal,
+            R.raw.rosewood,
+            R.raw.yellow,
+            R.raw.red,
+            R.raw.green,
+            R.raw.blue
     };
 
     final String [] colorNames = {"aqua",
-            "black",
+            //"black",
             "blue",
             "red",
             "fuchsia",
@@ -90,7 +139,32 @@ public class MainActivity extends AppCompatActivity {
             "silver",
             "teal",
             "white",
-            "yellow"};
+            "yellow",
+            "orange",
+            "snow",
+            "coral",
+            "brown",
+            "chocolate",
+            "mustarad",
+            "sand",
+            "aquamarine",
+            "mint",
+            "azure",
+            "cobalt",
+            "ultramarine",
+            "lavender",
+            "violet",
+            "plum",
+            "pink",
+            "ruby",
+            "burgundy",
+            "cardinal",
+            "rosewood",
+            "dark yellow",
+            "dark red",
+            "dark green",
+            "dark blue",
+    };
 
     //private TextView txv_rgb;
 
@@ -167,7 +241,7 @@ public class MainActivity extends AppCompatActivity {
                 // Add code to execute on click
 
                 // TEST - uncomment to test the application
-                //*
+                /*
                 colorIndex = 3;
                 int r = colors[colorIndex*3];
                 int g = colors[colorIndex*3+1];
@@ -189,6 +263,15 @@ public class MainActivity extends AppCompatActivity {
                 img_palette.setVisibility(View.VISIBLE);
 
                 if (audioId != 0 && canSpeak) {
+                    String colorName = colorNames[colorIndex];
+                    if (colorName.startsWith("dark")) {
+                        MediaPlayer mediaPlayer1 = MediaPlayer.create(context, R.raw.dark);
+                        mediaPlayer1.start();
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {
+                        }
+                    }
                     MediaPlayer mediaPlayer = MediaPlayer.create(context, audioId);
                     mediaPlayer.start();
                 }
@@ -239,7 +322,7 @@ public class MainActivity extends AppCompatActivity {
 
                 colorIndex = 0;
                 int minDist = Integer.MAX_VALUE;
-                for (int i = 0; i < colors.length; i++) {
+                for (int i = 0; i < colors.length/3; i++) {
                     // get i-th color RGB values from the Color array
                     int r1 = colors[3 * i];
                     int g1 = colors[3 * i + 1];
@@ -253,6 +336,8 @@ public class MainActivity extends AppCompatActivity {
                         colorIndex = i;
                     }
                 }
+
+                //System.out.println("test");
 
                 // now we have the closest color in the color table, get the color name
                 //String name = colorNames[index];
@@ -287,7 +372,7 @@ public class MainActivity extends AppCompatActivity {
         client =
                 new MqttAndroidClient(this.getApplicationContext(), SERVER_URI, clientId);
         try {
-            /*
+            //*
             IMqttToken token = client.connect();
             token.setActionCallback(new IMqttActionListener() {
                 @Override

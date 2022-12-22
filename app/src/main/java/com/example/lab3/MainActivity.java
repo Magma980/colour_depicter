@@ -241,7 +241,7 @@ public class MainActivity extends AppCompatActivity {
                 // Add code to execute on click
 
                 // TEST - uncomment to test the application
-                /*
+                //*
                 colorIndex = 3;
                 int r = colors[colorIndex*3];
                 int g = colors[colorIndex*3+1];
@@ -261,6 +261,25 @@ public class MainActivity extends AppCompatActivity {
                 txt_colorName.setVisibility(View.VISIBLE);
                 rgb_layout.setVisibility(View.VISIBLE);
                 img_palette.setVisibility(View.VISIBLE);
+
+                // PALETTE
+                //*
+                int numColors = colorIds.length;
+                int[] palette = new int[numColors];
+
+                for (int i = 0; i < numColors; i++) {
+                    palette[i] = (255 << 24) | (colors[3*i] << 16) | (colors[3*i + 1] << 8) | (colors[3*i + 2]);
+                }
+
+                try {
+                    Bitmap bitmap = Bitmap.createBitmap(palette, 0, numColors, numColors, 1,
+                            Bitmap.Config.ARGB_8888);
+
+                    img_palette.setImageBitmap(bitmap);
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
+                //*/
 
                 if (audioId != 0 && canSpeak) {
                     String colorName = colorNames[colorIndex];
@@ -364,7 +383,7 @@ public class MainActivity extends AppCompatActivity {
             public void deliveryComplete(IMqttDeliveryToken token) {
             }
         });
-//*/
+        //*/
     }
 
     private void connect() {

@@ -187,6 +187,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean canSpeak = true;
     private int colorWhite = Color.rgb(255, 255, 255);
     private int colorBlack = Color.rgb(0, 0, 0);
+    private final int Scale = 4;
 
     private int audioId;
 
@@ -198,6 +199,8 @@ public class MainActivity extends AppCompatActivity {
 //    private static final String TOPICPROX = "PROXIMITY"; // YOUR TOPIC HERE, must match the Python script!!!
 //    private static final String TOPICLUX = "LUX"; // YOUR TOPIC HERE, must match the Python script!!!
     private static final String TOPICRGB = "RGB"; // YOUR TOPIC HERE, must match the Python script!!!
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -241,20 +244,22 @@ public class MainActivity extends AppCompatActivity {
                 // Add code to execute on click
 
                 // TEST - uncomment to test the application
-                //*
-                colorIndex = 3;
-                int r = colors[colorIndex*3];
-                int g = colors[colorIndex*3+1];
-                int b = colors[colorIndex*3+2];
+                /*
+                colorIndex = 14;
+                r = colors[colorIndex*3];
+                g = colors[colorIndex*3+1];
+                b = colors[colorIndex*3+2];
                 audioId = colorIds[colorIndex];
                 txv_sensorTxt.setText("R: " + r + "    G: " + g + "    B: " + b);
                 btn_color.setBackgroundColor(Color.rgb(r, g, b));
                 txt_colorName.setText(colorNames[colorIndex]);
-                if (colorIndex == 1) {
-                    btn_color.setTextColor(colorWhite);
-                } else {
-                    btn_color.setTextColor(colorBlack);
-                }
+                setTextColor();
+
+//                if (colorIndex == 1) {
+//                    btn_color.setTextColor(colorWhite);
+//                } else {
+//                    btn_color.setTextColor(colorBlack);
+//                }
                 //*/
 
                 // SHOW controls:
@@ -333,9 +338,9 @@ public class MainActivity extends AppCompatActivity {
 //                }
 //                else{
                 colorValues = new String(message.getPayload()).split(",");
-                r = Integer.parseInt(colorValues[0]);
-                g = Integer.parseInt(colorValues[1]);
-                b = Integer.parseInt(colorValues[2]);
+                r = Math.min(255, Scale * Integer.parseInt(colorValues[0]));
+                g = Math.min(255, Scale * Integer.parseInt(colorValues[1]));
+                b = Math.min(255, Scale * Integer.parseInt(colorValues[2]));
                 RGBMessage = Color.rgb(r, g, b);
                 System.out.println(RGBMessage);
 
@@ -378,12 +383,47 @@ public class MainActivity extends AppCompatActivity {
 
                 //txv_light.setText(luxMessage);
                 btn_color.setBackgroundColor(RGBMessage);
+
+                setTextColor();
             }
             @Override
             public void deliveryComplete(IMqttDeliveryToken token) {
             }
         });
         //*/
+    }
+
+    private void setTextColor() {
+        // compute normalized vector for the color
+        // compute the length
+        double length = Math.sqrt(r*r + g*g + b*b);
+        if (length <0.01)
+        {
+            btn_color.setTextColor(Color.rgb (255,255,255));
+        }
+        else
+        {
+            double r1,g1,b1;
+            if (r<128) r1 = 255;
+            else r1 = 0;
+
+            if (g<128) g1 = 255;
+            else g1 = 0;
+
+            if (b<128) b1 = 255;
+            else b1 = 0;
+
+
+//            // normalize RBG components, from 0-1
+//            double r1 = r + 128 * r/length;
+//            double g1 = g + 128 * g/length;
+//            double b1 = b + 128 * b/length;
+//            if (r1 > 255) r1 -= 255;
+//            if (g1 > 255) g1 -= 255;
+//            if (b1 > 255) b1 -= 255;
+
+            btn_color.setTextColor(Color.rgb((int)r1, (int)g1, (int)b1));
+        }
     }
 
     private void connect() {

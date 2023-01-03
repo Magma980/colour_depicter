@@ -2,13 +2,11 @@ package com.example.lab3;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.speech.RecognizerIntent;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -38,15 +36,9 @@ import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-
-import java.util.List;
 //*/
 
 public class MainActivity extends AppCompatActivity {
-
-    private static final int SPEECH_REQUEST_CODE = 0;
-
-
 
     final int[] colors = {0,255,255,
             0,0,0,
@@ -112,8 +104,6 @@ public class MainActivity extends AppCompatActivity {
 //    private TextView txv_proximity;
     private Button btn_color;
 
-    String spokenText;
-
     int RGBMessage;
     int r;
     int g;
@@ -134,29 +124,6 @@ public class MainActivity extends AppCompatActivity {
 //    private static final String TOPICPROX = "PROXIMITY"; // YOUR TOPIC HERE, must match the Python script!!!
 //    private static final String TOPICLUX = "LUX"; // YOUR TOPIC HERE, must match the Python script!!!
     private static final String TOPICRGB = "RGB"; // YOUR TOPIC HERE, must match the Python script!!!
-
-    // Create an intent that can start the Speech Recognizer activity
-    private void displaySpeechRecognizer() {
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-// This starts the activity and populates the intent with the speech text.
-        startActivityForResult(intent, SPEECH_REQUEST_CODE);
-    }
-
-    // This callback is invoked when the Speech Recognizer returns.
-// This is where you process the intent and extract the speech text from the intent.
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode,
-                                    Intent data) {
-        if (requestCode == SPEECH_REQUEST_CODE && resultCode == RESULT_OK) {
-            List<String> results = data.getStringArrayListExtra(
-                    RecognizerIntent.EXTRA_RESULTS);
-            spokenText = results.get(0);
-            // Do something with spokenText.
-        }
-        super.onActivityResult(requestCode, resultCode, data);
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -197,11 +164,10 @@ public class MainActivity extends AppCompatActivity {
 
         btn_color.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                displaySpeechRecognizer();
                 // Add code to execute on click
 
-                //TEST - uncomment to test the application
-                /*
+                // TEST - uncomment to test the application
+                //*
                 colorIndex = 3;
                 int r = colors[colorIndex*3];
                 int g = colors[colorIndex*3+1];
@@ -221,11 +187,10 @@ public class MainActivity extends AppCompatActivity {
                 txt_colorName.setVisibility(View.VISIBLE);
                 rgb_layout.setVisibility(View.VISIBLE);
                 img_palette.setVisibility(View.VISIBLE);
-                if (spokenText.equals("depict") || spokenText.equals("colour")){
-                    if (audioId != 0 && canSpeak) {
-                        MediaPlayer mediaPlayer = MediaPlayer.create(context, audioId);
-                        mediaPlayer.start();
-                    }
+
+                if (audioId != 0 && canSpeak) {
+                    MediaPlayer mediaPlayer = MediaPlayer.create(context, audioId);
+                    mediaPlayer.start();
                 }
             }
         });
@@ -274,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
 
                 colorIndex = 0;
                 int minDist = Integer.MAX_VALUE;
-                for (int i = 0; i < colors.length/3; i++) {
+                for (int i = 0; i < colors.length; i++) {
                     // get i-th color RGB values from the Color array
                     int r1 = colors[3 * i];
                     int g1 = colors[3 * i + 1];
@@ -288,7 +253,7 @@ public class MainActivity extends AppCompatActivity {
                         colorIndex = i;
                     }
                 }
-                System.out.println("test");
+
                 // now we have the closest color in the color table, get the color name
                 //String name = colorNames[index];
                 // file name to play the sound
@@ -322,7 +287,7 @@ public class MainActivity extends AppCompatActivity {
         client =
                 new MqttAndroidClient(this.getApplicationContext(), SERVER_URI, clientId);
         try {
-            //*
+            /*
             IMqttToken token = client.connect();
             token.setActionCallback(new IMqttActionListener() {
                 @Override

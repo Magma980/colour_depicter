@@ -2,11 +2,13 @@ package com.example.lab3;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -36,6 +38,8 @@ import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+
+import java.util.List;
 //*/
 
 public class MainActivity extends AppCompatActivity {
@@ -104,6 +108,8 @@ public class MainActivity extends AppCompatActivity {
 //    private TextView txv_proximity;
     private Button btn_color;
 
+    String spokenText;
+
     int RGBMessage;
     int r;
     int g;
@@ -124,7 +130,30 @@ public class MainActivity extends AppCompatActivity {
 //    private static final String TOPICPROX = "PROXIMITY"; // YOUR TOPIC HERE, must match the Python script!!!
 //    private static final String TOPICLUX = "LUX"; // YOUR TOPIC HERE, must match the Python script!!!
     private static final String TOPICRGB = "RGB"; // YOUR TOPIC HERE, must match the Python script!!!
+    private static final int SPEECH_REQUEST_CODE = 0;
 
+    // Create an intent that can start the Speech Recognizer activity
+    private void displaySpeechRecognizer() {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+// This starts the activity and populates the intent with the speech text.
+        startActivityForResult(intent, SPEECH_REQUEST_CODE);
+    }
+
+    // This callback is invoked when the Speech Recognizer returns.
+// This is where you process the intent and extract the speech text from the intent.
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode,
+                                    Intent data) {
+        if (requestCode == SPEECH_REQUEST_CODE && resultCode == RESULT_OK) {
+            List<String> results = data.getStringArrayListExtra(
+                    RecognizerIntent.EXTRA_RESULTS);
+            spokenText = results.get(0);
+            // Do something with spokenText.
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -168,29 +197,31 @@ public class MainActivity extends AppCompatActivity {
 
                 // TEST - uncomment to test the application
                 //*
-                colorIndex = 3;
-                int r = colors[colorIndex*3];
-                int g = colors[colorIndex*3+1];
-                int b = colors[colorIndex*3+2];
-                audioId = colorIds[colorIndex];
-                txv_sensorTxt.setText("R: " + r + "    G: " + g + "    B: " + b);
-                btn_color.setBackgroundColor(Color.rgb(r, g, b));
-                txt_colorName.setText(colorNames[colorIndex]);
-                if (colorIndex == 1) {
-                    btn_color.setTextColor(colorWhite);
-                } else {
-                    btn_color.setTextColor(colorBlack);
-                }
-                //*/
+                if(spokenText.equals("depict") || spokenText.equals("")) {
+                    colorIndex = 3;
+                    int r = colors[colorIndex * 3];
+                    int g = colors[colorIndex * 3 + 1];
+                    int b = colors[colorIndex * 3 + 2];
+                    audioId = colorIds[colorIndex];
+                    txv_sensorTxt.setText("R: " + r + "    G: " + g + "    B: " + b);
+                    btn_color.setBackgroundColor(Color.rgb(r, g, b));
+                    txt_colorName.setText(colorNames[colorIndex]);
+                    if (colorIndex == 1) {
+                        btn_color.setTextColor(colorWhite);
+                    } else {
+                        btn_color.setTextColor(colorBlack);
+                    }
+                    //*/
 
-                // SHOW controls:
-                txt_colorName.setVisibility(View.VISIBLE);
-                rgb_layout.setVisibility(View.VISIBLE);
-                img_palette.setVisibility(View.VISIBLE);
+                    // SHOW controls:
+                    txt_colorName.setVisibility(View.VISIBLE);
+                    rgb_layout.setVisibility(View.VISIBLE);
+                    img_palette.setVisibility(View.VISIBLE);
 
-                if (audioId != 0 && canSpeak) {
-                    MediaPlayer mediaPlayer = MediaPlayer.create(context, audioId);
-                    mediaPlayer.start();
+                    if (audioId != 0 && canSpeak) {
+                        MediaPlayer mediaPlayer = MediaPlayer.create(context, audioId);
+                        mediaPlayer.start();
+                    }
                 }
             }
         });

@@ -270,6 +270,7 @@ public class MainActivity extends AppCompatActivity {
 
         btn_color.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                displaySpeechRecognizer();
                 // Add code to execute on click
 
                 // TEST - uncomment to test the application

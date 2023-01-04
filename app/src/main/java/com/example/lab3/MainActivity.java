@@ -325,7 +325,7 @@ public class MainActivity extends AppCompatActivity {
                 RGBMessage = Color.rgb(r, g, b);
                 System.out.println(RGBMessage);
 
-                colorIndex = 0;
+                colorIndex =0;
                 int minDist = Integer.MAX_VALUE;
                 for (int i = 0; i < colors.length/3; i++) {
                     // get i-th color RGB values from the Color array
@@ -378,8 +378,8 @@ public class MainActivity extends AppCompatActivity {
         //if(spokenText.equals("распознать") || spokenText.equals("")) {
 //        if(spokenText.equals("depict") || spokenText.equals("")) {
         spokenText = spokenText.toLowerCase(Locale.ROOT);
-        if(spokenText.equals("depict") || spokenText.equals("try") || spokenText.equals("do") || spokenText.equals("")) {
-            colorIndex = 15;
+        if (spokenText.equals("depict") || spokenText.equals("try") || spokenText.equals("do") || spokenText.equals("")) {
+            colorIndex = 18;
             r = colors[colorIndex * 3];
             g = colors[colorIndex * 3 + 1];
             b = colors[colorIndex * 3 + 2];
@@ -444,12 +444,12 @@ public class MainActivity extends AppCompatActivity {
     private void setTextColor() {
         // compute normalized vector for the color
         // compute the length
-        double length = Math.sqrt(r*r + g*g + b*b);
-        if (length <0.01)
-        {
-            btn_color.setTextColor(Color.rgb (255,255,255));
-        }
-        else
+//        double length = Math.sqrt(r*r + g*g + b*b);
+//        if (length <0.01)
+//        {
+//            btn_color.setTextColor(Color.rgb (255,255,255));
+//        }
+//        else
         {
             double r1,g1,b1;
             if (r<128) r1 = 255;

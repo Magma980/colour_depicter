@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -18,18 +17,6 @@ import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
-
-/*
-import info.mqtt.android.service.MqttAndroidClient;
-import org.eclipse.paho.client.mqttv3.IMqttActionListener;
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.IMqttToken;
-import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-
-/*/
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -40,11 +27,10 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.util.List;
-import java.util.Locale;
-//*/
 
 public class MainActivity extends AppCompatActivity {
 
+    // RGB colors
     final int[] colors = {0,255,255,
             0,0,0,
             0,0,255,
@@ -87,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
             0,0,32
     };
 
+    // ID for sounds in resourses (res)
     final int [] colorIds = {R.raw.aqua,
             R.raw.black,
             R.raw.blue,
@@ -129,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
             R.raw.blue
     };
 
+    // color names
     final String [] colorNames = {"aqua",
             "black",
             "blue",
@@ -171,16 +159,11 @@ public class MainActivity extends AppCompatActivity {
             "dark blue",
     };
 
-    //private TextView txv_rgb;
-
     TextView txt_colorName;
     LinearLayout rgb_layout;
     ImageView img_palette;
     TextView txv_sensorTxt;
 
-    private Switch switch_speaker;
-//    private TextView txv_light;
-//    private TextView txv_proximity;
     private Button btn_color;
 
     String spokenText = "";
@@ -189,65 +172,37 @@ public class MainActivity extends AppCompatActivity {
     int r;
     int g;
     int b;
-    int colorIndex = 0;
+    int colorIndex = 18;
     String[] colorValues;
     private boolean canSpeak = true;
-    private int colorWhite = Color.rgb(255, 255, 255);
-    private int colorBlack = Color.rgb(0, 0, 0);
     private final int Scale = 4;
 
-    private int audioId;
+    private static final int SPEECH_REQUEST_CODE = 0;
 
-    private MainActivity context;
+    // From the MQTT lab:
     private MqttAndroidClient client;
     private static final String SERVER_URI = "tcp://test.mosquitto.org:1883";
     private static final String TAG = "MainActivity";
-
-//    private static final String TOPICPROX = "PROXIMITY"; // YOUR TOPIC HERE, must match the Python script!!!
-//    private static final String TOPICLUX = "LUX"; // YOUR TOPIC HERE, must match the Python script!!!
     private static final String TOPICRGB = "RGB"; // YOUR TOPIC HERE, must match the Python script!!!
-    private static final int SPEECH_REQUEST_CODE = 0;
 
-    // Create an intent that can start the Speech Recognizer activity
-    private void displaySpeechRecognizer() {
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-// This starts the activity and populates the intent with the speech text.
-        startActivityForResult(intent, SPEECH_REQUEST_CODE);
-    }
-
-    // This callback is invoked when the Speech Recognizer returns.
-// This is where you process the intent and extract the speech text from the intent.
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode,
-                                    Intent data) {
-        if (requestCode == SPEECH_REQUEST_CODE && resultCode == RESULT_OK) {
-            List<String> results = data.getStringArrayListExtra(
-                    RecognizerIntent.EXTRA_RESULTS);
-            spokenText = results.get(0);
-            // Do something with spokenText.
-            recognizeColor();
-        }
-        super.onActivityResult(requestCode, resultCode, data);
-    }
+    // Called ONLY ONCE, at the activity start.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // set the current activity look to the XML designed in Android Studio
         setContentView(R.layout.activity_main);
 
-        context = this;
+        // Our own initializations
 
-        // initialize the Switch
-        switch_speaker = findViewById(R.id.speakerSwitch);
-        switch_speaker.setChecked(canSpeak);
-        //txv_rgb = findViewById(R.id.txv_rgbValue);
+        // get all controls and store them into corresponding class variables
         txt_colorName = findViewById(R.id.txt_colorName);
         txv_sensorTxt = findViewById(R.id.txv_sensorTxt);
         rgb_layout = findViewById(R.id.rgb_layout);
         img_palette = findViewById(R.id.img_palette);
+        btn_color = findViewById(R.id.btnColor);
 
-        // HIDE:
+        // HIDE controls at the beginning, so that they are not visible on the screen (they are GONE)
         txt_colorName.setVisibility(View.GONE);
         rgb_layout.setVisibility(View.GONE);
         img_palette.setVisibility(View.GONE);
@@ -255,11 +210,31 @@ public class MainActivity extends AppCompatActivity {
         // set the initial text
         txv_sensorTxt.setText("Nothing yet!");
 
+        // PALETTE
+        //*
+        int numColors = colorIds.length;
+        int[] palette = new int[numColors];
 
-//        txv_light = (TextView) findViewById(R.id.txv_lightValue);
-//        txv_proximity = (TextView) findViewById(R.id.txv_proximityValue);
-        btn_color = findViewById(R.id.btnColor);
+        for (int i = 0; i < numColors; i++) {
+            palette[i] = (255 << 24) | (colors[3 * i] << 16) | (colors[3 * i + 1] << 8) | (colors[3 * i + 2]);
+        }
 
+        try {
+            Bitmap bitmap = Bitmap.createBitmap(palette, 0, numColors, numColors, 1,
+                    Bitmap.Config.ARGB_8888);
+
+            img_palette.setImageBitmap(bitmap);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        //*/
+
+        // SWITCH to turn ON/OFF the voice announcement for the color name
+        // initialize the Switch locally (we do not save it into the class variable)
+        Switch switch_speaker = findViewById(R.id.speakerSwitch);
+        // Set the initial switch state
+        switch_speaker.setChecked(canSpeak);
+        // set the function callback that will be called when the user touches the switch control
         switch_speaker.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 // do something, the isChecked will be
@@ -268,37 +243,29 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // set the function callback that will be called when the user touches the button
         btn_color.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                // The code to execute on click:
                 displaySpeechRecognizer();
-                // Add code to execute on click
-
-                // TEST - uncomment to test the application
-                /*
-
-                 */
-                recognizeColor();
             }
         });
 
+        // From the MQTT lab: connect the client to Raspberry PI
         connect();
 
-        displaySpeechRecognizer();
-
         //*
+        // From the MQTT lab: set the client callback to subscribe to the RGB sensor messages
+        // The callback will be called each time we get a message from the RGB sensor
         client.setCallback(new MqttCallbackExtended() {
             @Override
             public void connectComplete(boolean reconnect, String serverURI) {
                 if (reconnect) {
                     System.out.println("Reconnected to : " + serverURI);
                     // Re-subscribe as we lost it due to new session
-//                    subscribe(TOPICPROX);
-//                    subscribe(TOPICLUX);
                     subscribe(TOPICRGB);
                 } else {
                     System.out.println("Connected to: " + serverURI);
-//                    subscribe(TOPICPROX);
-//                    subscribe(TOPICLUX);
                     subscribe(TOPICRGB);
                 }
             }
@@ -306,26 +273,19 @@ public class MainActivity extends AppCompatActivity {
             public void connectionLost(Throwable cause) {
                 System.out.println("The Connection was lost.");
             }
-//            String proxMessage;
-//            String luxMessage;
 
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
-//                if(topic.equals("PROXIMITY")){
-//                     proxMessage = new String(message.getPayload());
-//                }
-//                else if (topic.equals("LUX")){
-//                    luxMessage = new String(message.getPayload());
-//                }
-//                else{
+
                 colorValues = new String(message.getPayload()).split(",");
+                // 1. we extract each color component from the string
+                // 2. we scale each color component by Scale
+                // 3. after scaling the value may become > 255, we clip it to 255
                 r = Math.min(255, Scale * Integer.parseInt(colorValues[0]));
                 g = Math.min(255, Scale * Integer.parseInt(colorValues[1]));
                 b = Math.min(255, Scale * Integer.parseInt(colorValues[2]));
                 RGBMessage = Color.rgb(r, g, b);
-                System.out.println(RGBMessage);
 
-                colorIndex =0;
                 int minDist = Integer.MAX_VALUE;
                 for (int i = 0; i < colors.length/3; i++) {
                     // get i-th color RGB values from the Color array
@@ -342,142 +302,98 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
-                //System.out.println("test");
-
-                // now we have the closest color in the color table, get the color name
-                //String name = colorNames[index];
                 // file name to play the sound
                 txt_colorName.setText(colorNames[colorIndex]);
 
-                audioId = colorIds[colorIndex];
+                txv_sensorTxt.setText("R: " + r + "    G: " + g + "    B: " + b);
 
-                String newMessage = new String(message.getPayload());
-                System.out.println("Incoming message: " + newMessage);
-                // add code here to interact with elements
-                // (text views, buttons)
-                // using data from newMessage
-                //
-                // Uncomment accordingly
-                //txv_proximity.setText(proxMessage);
-                //txv_rgb.setText(RGBMessage+"");
-                txv_sensorTxt.setText("R: " +r + "    G: " +g + "    B: " + b);
-
-                //txv_light.setText(luxMessage);
                 btn_color.setBackgroundColor(RGBMessage);
 
+                // set the best text color so it is visible on top of the background color
                 setTextColor();
             }
+
             @Override
             public void deliveryComplete(IMqttDeliveryToken token) {
             }
         });
         //*/
+
+        // show the Google voice recognizer
+        displaySpeechRecognizer();
+    }
+
+    // This callback is invoked when the Speech Recognizer returns.
+    // This is where you process the intent and extract the speech text from the intent.
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == SPEECH_REQUEST_CODE && resultCode == RESULT_OK) {
+            List<String> results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            spokenText = results.get(0);
+            // convert the recognized text to the lower case for simplicity
+            spokenText = spokenText.toLowerCase();
+            // Do something with the recognized text
+            recognizeColor();
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    // Create an intent that can start the Speech Recognizer activity
+    private void displaySpeechRecognizer() {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        // This starts the activity and populates the intent with the speech text.
+        startActivityForResult(intent, SPEECH_REQUEST_CODE);
     }
 
     private void recognizeColor() {
-        //if(spokenText.equals("распознать") || spokenText.equals("")) {
-//        if(spokenText.equals("depict") || spokenText.equals("")) {
-        spokenText = spokenText.toLowerCase(Locale.ROOT);
+
         if (spokenText.equals("depict") || spokenText.equals("try") || spokenText.equals("do") || spokenText.equals("")) {
-            colorIndex = 18;
+
             r = colors[colorIndex * 3];
             g = colors[colorIndex * 3 + 1];
             b = colors[colorIndex * 3 + 2];
-            audioId = colorIds[colorIndex];
+
             txv_sensorTxt.setText("R: " + r + "    G: " + g + "    B: " + b);
             btn_color.setBackgroundColor(Color.rgb(r, g, b));
             txt_colorName.setText(colorNames[colorIndex]);
             setTextColor();
 
-            //                if (colorIndex == 1) {
-            //                    btn_color.setTextColor(colorWhite);
-            //                } else {
-            //                    btn_color.setTextColor(colorBlack);
-            //                }
-            //*/
-
             // SHOW controls:
             txt_colorName.setVisibility(View.VISIBLE);
             rgb_layout.setVisibility(View.VISIBLE);
-            img_palette.setVisibility(View.VISIBLE);
+            //img_palette.setVisibility(View.VISIBLE);
 
-            if (audioId != 0 && canSpeak) {
-                MediaPlayer mediaPlayer = MediaPlayer.create(context, audioId);
-                mediaPlayer.start();
-            }
-
-            // PALETTE
-            //*
-            int numColors = colorIds.length;
-            int[] palette = new int[numColors];
-
-            for (int i = 0; i < numColors; i++) {
-                palette[i] = (255 << 24) | (colors[3 * i] << 16) | (colors[3 * i + 1] << 8) | (colors[3 * i + 2]);
-            }
-
-            try {
-                Bitmap bitmap = Bitmap.createBitmap(palette, 0, numColors, numColors, 1,
-                        Bitmap.Config.ARGB_8888);
-
-                img_palette.setImageBitmap(bitmap);
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
-            }
-            //*/
-
-            if (audioId != 0 && canSpeak) {
-                String colorName = colorNames[colorIndex];
-                if (colorName.startsWith("dark")) {
-                    MediaPlayer mediaPlayer1 = MediaPlayer.create(context, R.raw.dark);
-                    mediaPlayer1.start();
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                    }
-                }
-                MediaPlayer mediaPlayer = MediaPlayer.create(context, audioId);
+            if (canSpeak) {
+                // get the audio resource ID
+                int audioId = colorIds[colorIndex];
+                MediaPlayer mediaPlayer = MediaPlayer.create(this, audioId);
                 mediaPlayer.start();
             }
         }
     }
 
+    // We calculate the best text color so it will be visible on the current button background
     private void setTextColor() {
-        // compute normalized vector for the color
-        // compute the length
-//        double length = Math.sqrt(r*r + g*g + b*b);
-//        if (length <0.01)
-//        {
-//            btn_color.setTextColor(Color.rgb (255,255,255));
-//        }
-//        else
-        {
-            double r1,g1,b1;
-            if (r<128) r1 = 255;
-            else r1 = 0;
 
-            if (g<128) g1 = 255;
-            else g1 = 0;
+        int r1, g1, b1;
+        if (r < 128) r1 = 255;
+        else r1 = 0;
 
-            if (b<128) b1 = 255;
-            else b1 = 0;
+        if (g < 128) g1 = 255;
+        else g1 = 0;
 
+        if (b < 128) b1 = 255;
+        else b1 = 0;
 
-//            // normalize RBG components, from 0-1
-//            double r1 = r + 128 * r/length;
-//            double g1 = g + 128 * g/length;
-//            double b1 = b + 128 * b/length;
-//            if (r1 > 255) r1 -= 255;
-//            if (g1 > 255) g1 -= 255;
-//            if (b1 > 255) b1 -= 255;
-
-            btn_color.setTextColor(Color.rgb((int)r1, (int)g1, (int)b1));
-        }
+        btn_color.setTextColor(Color.rgb(r1, g1, b1));
     }
 
+    // Try to connect to Raspberry PI using MQTT client
     private void connect() {
         String clientId = MqttClient.generateClientId();
-        client =
-                new MqttAndroidClient(this.getApplicationContext(), SERVER_URI, clientId);
+        client = new MqttAndroidClient(this.getApplicationContext(), SERVER_URI, clientId);
         try {
             //*
             IMqttToken token = client.connect();
@@ -525,8 +441,6 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-
-
 }
 
 
